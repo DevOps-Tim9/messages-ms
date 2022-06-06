@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"messages-ms/src/dto"
+	"messages-ms/src/entity"
 	"messages-ms/src/service"
 	"net/http"
 	"strconv"
@@ -45,15 +46,19 @@ func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Reque
 func (c MessageController) GetMesssagesByConversation(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
-	conversation, err := strconv.Atoi(params["conversation"])
+	conversation := params["conversation"]
 
-	if err != nil {
+	if conversation == "" {
 		w.WriteHeader(http.StatusBadRequest)
 
 		return
 	}
 
-	messages := c.MessageService.GetMesssagesByConversation(uint(conversation))
+	messages := c.MessageService.GetMesssagesByConversation(conversation)
+
+	if messages == nil {
+		messages = []entity.Message{}
+	}
 
 	payload, _ := json.Marshal(messages)
 
@@ -74,6 +79,10 @@ func (c MessageController) GetConversationsByUser(w http.ResponseWriter, r *http
 	}
 
 	conversations := c.MessageService.GetConversationsByUser(uint(user))
+
+	if conversations == nil {
+		conversations = []entity.Conversation{}
+	}
 
 	payload, _ := json.Marshal(conversations)
 

@@ -1,13 +1,16 @@
 package entity
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Conversation struct {
-	gorm.Model
-	User1         uint `gorm:"not null;default:null"`
-	User2         uint `gorm:"not null;default:null"`
-	LastMessageId uint
-	LastMessage   Message
-
-	Tbl string `gorm:"-"`
+	ID          primitive.ObjectID `bson:"_id"`
+	CreatedAt   time.Time          `bson:"created_at"`
+	UpdatedAt   time.Time          `bson:"updated_at"`
+	User1       uint               `bson:"user1"`
+	User2       uint               `bson:"user2"`
+	LastMessage Message            `bson:"lastMessage, omitempty"`
 }

@@ -1,30 +1,67 @@
 package repository
 
 import (
+	"context"
 	"messages-ms/src/entity"
 
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type IMessageRepository interface {
 	Create(entity.Message) (entity.Message, error)
-	GetMesssagesByConversation(uint) []*entity.Message
+	Update(entity.Message) error
+	GetMesssagesByConversation(string) []entity.Message
 }
 
 type MessageRepository struct {
-	Database *gorm.DB
+	Database *mongo.Database
 }
 
 func (r MessageRepository) Create(message entity.Message) (entity.Message, error) {
-	err := r.Database.Save(&message).Error
+	var newMessage = entity.Message{}
 
-	return message, err
+	result, err := r.Database.Collection("messages").InsertOne(context.TODO(), message)
+
+	if err != nil {
+		return entity.Message{}, err
+	}
+
+	document := r.Database.Collection("messages").FindOne(context.TODO(), bson.D{{"_id", result.InsertedID}})
+
+	if document.Err() != nil {
+		return entity.Message{}, document.Err()
+	}
+
+	err = document.Decode(&newMessage)
+
+	return newMessage, err
 }
 
-func (r MessageRepository) GetMesssagesByConversation(conversationId uint) []*entity.Message {
-	var messages = []*entity.Message{}
+func (r MessageRepository) Update(message entity.Message) error {
+	_, err := r.Database.Collection("messages").UpdateOne(context.TODO(), bson.D{{"_id", message.ID}}, message)
 
-	r.Database.Preload("Conversation").Where("conversation_id = ?", conversationId).Order("created_at DESC").Find(&messages)
+	return err
+}
+
+func (r MessageRepository) GetMesssagesByConversation(conversationId string) []entity.Message {
+	var messages []entity.Message
+
+	opts := options.Find().SetSort(bson.D{{"created_at", -1}})
+
+	id, _ := primitive.ObjectIDFromHex(conversationId)
+
+	cursor, err := r.Database.Collection("messages").Find(context.TODO(), bson.D{{Key: "conversationId", Value: id}}, opts)
+
+	if err != nil {
+		return make([]entity.Message, 0)
+	}
+
+	if err = cursor.All(context.TODO(), &messages); err != nil {
+		return make([]entity.Message, 0)
+	}
 
 	return messages
 }

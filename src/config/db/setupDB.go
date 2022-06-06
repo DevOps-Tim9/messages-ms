@@ -1,34 +1,26 @@
 package config_db
 
 import (
+	"context"
 	"fmt"
-	"messages-ms/src/entity"
 	"os"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func SetupDB() (*gorm.DB, error) {
+func SetupDB() (*mongo.Database, error) {
 	host := os.Getenv("DATABASE_DOMAIN")
-	user := os.Getenv("DATABASE_USERNAME")
-	password := os.Getenv("DATABASE_PASSWORD")
 	name := os.Getenv("DATABASE_SCHEMA")
 	port := os.Getenv("DATABASE_PORT")
 
-	connectionString := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
-		host,
-		user,
-		password,
-		name,
-		port,
-	)
+	db, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(fmt.Sprintf("mongodb://%s:%s", host, port)))
+	if err != nil {
+		panic(err)
+	}
 
-	db, err := gorm.Open(postgres.Open(connectionString), &gorm.Config{})
+	db.Database(name).Collection("messages")
+	db.Database(name).Collection("conversations")
 
-	db.AutoMigrate(&entity.Message{Tbl: "messages"})
-	db.AutoMigrate(&entity.Conversation{Tbl: "conversations"})
-
-	return db, err
+	return db.Database(name), err
 }

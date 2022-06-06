@@ -9,6 +9,7 @@ require (
 	github.com/rs/zerolog v1.26.1
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.7.1
+	go.mongodb.org/mongo-driver v1.9.1
 	gopkg.in/go-playground/validator.v8 v8.18.2
 	gorm.io/driver/postgres v1.3.7
 	gorm.io/gorm v1.23.5

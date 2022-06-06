@@ -2,24 +2,17 @@ version: "3.7"
 
 services:
   database:
-    image: postgres:13
+    image: mongo
     restart: always
     networks:
       - messages-ms
-    environment: 
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    healthcheck:
-      test: pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+    environment:
+      MONGO_INITDB_DATABASE: ${POSTGRES_DB}
+    
     ports:
-      - "5400:5432"
+      - "5400:27017"
     volumes:
-      - data:/var/lib/postgresql/data
+      - data:/data/db
       
   messages-server:
     build:
@@ -39,9 +32,7 @@ services:
       SERVER_PORT: ${SERVER_PORT}
     ports:
     - "${SERVER_PORT}:${SERVER_PORT}"
-    depends_on:
-      database:
-        condition: service_healthy
+   
 
 volumes:
   data:

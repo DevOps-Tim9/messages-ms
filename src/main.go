@@ -12,7 +12,7 @@ import (
 	"os"
 
 	"github.com/rs/cors"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
@@ -52,7 +52,7 @@ func initializeServices(repositoryContainer config.RepositoryContainer) config.S
 	return container
 }
 
-func initializeRepositories(dataBase *gorm.DB) config.RepositoryContainer {
+func initializeRepositories(dataBase *mongo.Database) config.RepositoryContainer {
 	messageRepository := repository.MessageRepository{Database: dataBase}
 	conversationRepository := repository.ConversationRepository{Database: dataBase}
 
