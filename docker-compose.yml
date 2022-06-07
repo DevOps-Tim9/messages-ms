@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+  database:
+    image: mongo
+    restart: always
+    networks:
+      - messages-ms
+    environment:
+      MONGO_INITDB_DATABASE: ${POSTGRES_DB}
+    
+    ports:
+      - "5400:27017"
+    volumes:
+      - data:/data/db
+      
+  messages-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${TARGET:-run}
+    restart: on-failure
+    networks:
+      - messages-ms
+      - network-for-ms
+    environment: 
+      DATABASE_USERNAME: ${DATABASE_USERNAME}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_DOMAIN: ${DATABASE_DOMAIN}
+      DATABASE_SCHEMA: ${DATABASE_SCHEMA}
+      DATABASE_PORT: ${DATABASE_PORT}
+      SERVER_PORT: ${SERVER_PORT}
+    ports:
+    - "${SERVER_PORT}:${SERVER_PORT}"
+   
+
+volumes:
+  data:
+    name: messages-ms-database
+
+networks:
+  messages-ms:
+    name: messages-ms
+    driver: bridge
+  network-for-ms:
+    name: network-for-ms
