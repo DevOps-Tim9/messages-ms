@@ -5,25 +5,31 @@ import (
 	"messages-ms/src/dto"
 	"messages-ms/src/entity"
 	"messages-ms/src/service"
+	"messages-ms/src/utils"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/validator.v8"
 )
 
 type MessageController struct {
 	MessageService service.IMessageService
 	validate       *validator.Validate
+	logger         *logrus.Entry
 }
 
 func NewMessageController(messageService service.IMessageService) MessageController {
 	config := &validator.Config{TagName: "validate"}
+	logger := utils.Logger()
 
-	return MessageController{MessageService: messageService, validate: validator.New(config)}
+	return MessageController{MessageService: messageService, validate: validator.New(config), logger: logger}
 }
 
 func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Request) {
+	c.logger.Info("Creating new message request received")
+
 	var messageDto dto.MessageDto
 
 	json.NewDecoder(r.Body).Decode(&messageDto)
@@ -36,6 +42,8 @@ func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	c.logger.Info("Message created successfully")
+
 	payload, _ := json.Marshal(message)
 
 	w.Header().Set("Content-Type", "application/json")
@@ -44,6 +52,8 @@ func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Reque
 }
 
 func (c MessageController) GetMesssagesByConversation(w http.ResponseWriter, r *http.Request) {
+	c.logger.Info("getting messages for specified conversation request received")
+
 	params := mux.Vars(r)
 
 	conversation := params["conversation"]
@@ -62,12 +72,16 @@ func (c MessageController) GetMesssagesByConversation(w http.ResponseWriter, r *
 
 	payload, _ := json.Marshal(messages)
 
+	c.logger.Info("Returning found messages")
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(payload))
 }
 
 func (c MessageController) GetConversationsByUser(w http.ResponseWriter, r *http.Request) {
+	c.logger.Info("Getting conversations for specified user request received")
+
 	params := mux.Vars(r)
 
 	user, err := strconv.Atoi(params["user"])
@@ -85,6 +99,8 @@ func (c MessageController) GetConversationsByUser(w http.ResponseWriter, r *http
 	}
 
 	payload, _ := json.Marshal(conversations)
+
+	c.logger.Info("Returning found conversations")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

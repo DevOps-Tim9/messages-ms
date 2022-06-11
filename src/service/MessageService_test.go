@@ -3,6 +3,7 @@ package service
 import (
 	"messages-ms/src/dto"
 	"messages-ms/src/repository"
+	"messages-ms/src/utils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,6 +29,7 @@ func (suite *MessageServiceUnitTestSuite) SetupSuite() {
 	suite.service = MessageService{
 		MessageRepository:      suite.messageRepositoryMock,
 		ConversationRepository: suite.conversationRepositoryMock,
+		Logger:                 utils.Logger(),
 	}
 }
 

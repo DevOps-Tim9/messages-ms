@@ -8,6 +8,7 @@ import (
 	"messages-ms/src/repository"
 	"messages-ms/src/route"
 	"messages-ms/src/service"
+	"messages-ms/src/utils"
 	"net/http"
 	"os"
 
@@ -16,6 +17,10 @@ import (
 )
 
 func main() {
+	logger := utils.Logger()
+
+	logger.Info("Connecting with DB")
+
 	dataBase, _ := config_db.SetupDB()
 
 	repositoryContainer := initializeRepositories(dataBase)
@@ -25,6 +30,8 @@ func main() {
 	router := route.SetupRoutes(controllerContainer)
 
 	port := os.Getenv("SERVER_PORT")
+
+	logger.Info("Starting server")
 
 	http.ListenAndServe(fmt.Sprintf(":%s", port), cors.AllowAll().Handler(router))
 }
@@ -43,6 +50,7 @@ func initializeServices(repositoryContainer config.RepositoryContainer) config.S
 	messageService := service.MessageService{
 		MessageRepository:      repositoryContainer.MessageRepository,
 		ConversationRepository: repositoryContainer.ConversationRepository,
+		Logger:                 utils.Logger(),
 	}
 
 	container := config.NewServiceContainer(
