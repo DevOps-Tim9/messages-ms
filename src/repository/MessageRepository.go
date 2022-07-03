@@ -4,6 +4,7 @@ import (
 	"context"
 	"messages-ms/src/entity"
 
+	"github.com/opentracing/opentracing-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -11,16 +12,20 @@ import (
 )
 
 type IMessageRepository interface {
-	Create(entity.Message) (entity.Message, error)
-	Update(entity.Message) error
-	GetMesssagesByConversation(string) []entity.Message
+	Create(entity.Message, context.Context) (entity.Message, error)
+	Update(entity.Message, context.Context) error
+	GetMesssagesByConversation(string, context.Context) []entity.Message
 }
 
 type MessageRepository struct {
 	Database *mongo.Database
 }
 
-func (r MessageRepository) Create(message entity.Message) (entity.Message, error) {
+func (r MessageRepository) Create(message entity.Message, ctx context.Context) (entity.Message, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "Repository - Crete new message")
+
+	defer span.Finish()
+
 	var newMessage = entity.Message{}
 
 	result, err := r.Database.Collection("messages").InsertOne(context.TODO(), message)
@@ -40,13 +45,21 @@ func (r MessageRepository) Create(message entity.Message) (entity.Message, error
 	return newMessage, err
 }
 
-func (r MessageRepository) Update(message entity.Message) error {
+func (r MessageRepository) Update(message entity.Message, ctx context.Context) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "Repository - Update message")
+
+	defer span.Finish()
+
 	_, err := r.Database.Collection("messages").UpdateOne(context.TODO(), bson.D{{"_id", message.ID}}, message)
 
 	return err
 }
 
-func (r MessageRepository) GetMesssagesByConversation(conversationId string) []entity.Message {
+func (r MessageRepository) GetMesssagesByConversation(conversationId string, ctx context.Context) []entity.Message {
+	span, _ := opentracing.StartSpanFromContext(ctx, "Repository - Get messages for specific conversation")
+
+	defer span.Finish()
+
 	var messages []entity.Message
 
 	opts := options.Find().SetSort(bson.D{{"created_at", -1}})
