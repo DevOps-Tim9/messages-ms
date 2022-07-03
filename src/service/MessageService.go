@@ -1,12 +1,19 @@
 package service
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"messages-ms/src/dto"
 	"messages-ms/src/entity"
+	"messages-ms/src/rabbitmq"
 	"messages-ms/src/repository"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,6 +28,7 @@ type MessageService struct {
 	MessageRepository      repository.IMessageRepository
 	ConversationRepository repository.IConversationRepository
 	Logger                 *logrus.Entry
+	RabbitMQChannel        *amqp.Channel
 }
 
 func (s MessageService) GetMesssagesByConversation(id string) []entity.Message {
@@ -39,6 +47,63 @@ func (s MessageService) GetConversationByUsers(user1 uint, user2 uint) (entity.C
 	s.Logger.Info("Getting conversation by participants")
 
 	return s.ConversationRepository.GetConversationByUsers(user1, user2)
+}
+
+func (s MessageService) AddNotification(message dto.MessageDto) {
+	userFrom := dto.UserResponseDTO{}
+	userTo := dto.UserResponseDTO{}
+
+	endpointFrom := fmt.Sprintf("http://%s/users/%d", os.Getenv("USER_SERVICE_DOMAIN"), message.From)
+
+	reqFrom, err := http.NewRequest("GET", endpointFrom, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	resFrom, err := http.DefaultClient.Do(reqFrom)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer resFrom.Body.Close()
+
+	if resFrom.StatusCode != 200 {
+		fmt.Println(resFrom.StatusCode)
+		return
+	} else {
+		b, _ := io.ReadAll(resFrom.Body)
+		errr := json.Unmarshal(b, &userFrom)
+		if errr != nil {
+			fmt.Println(errr.Error())
+		}
+	}
+
+	endpointTo := fmt.Sprintf("http://%s/users/%d", os.Getenv("USER_SERVICE_DOMAIN"), message.To)
+
+	reqTo, _ := http.NewRequest("GET", endpointTo, nil)
+
+	resTo, err := http.DefaultClient.Do(reqTo)
+	if err != nil {
+		return
+	}
+	defer resTo.Body.Close()
+
+	if resTo.StatusCode != 200 {
+		fmt.Println(resTo.StatusCode)
+		return
+	} else {
+		b, _ := io.ReadAll(resTo.Body)
+		errr := json.Unmarshal(b, &userTo)
+		if errr != nil {
+			fmt.Println(errr.Error())
+		}
+	}
+
+	messageType := dto.Message
+	notification := dto.NotificationDTO{Message: fmt.Sprintf("%s messaged you.", userFrom.Username), UserAuth0ID: userTo.Auth0ID, NotificationType: &messageType}
+
+	rabbitmq.AddNotification(&notification, s.RabbitMQChannel)
 }
 
 func (s MessageService) CreateNewMessage(dto dto.MessageDto) (entity.Message, error) {
@@ -76,6 +141,8 @@ func (s MessageService) CreateNewMessage(dto dto.MessageDto) (entity.Message, er
 
 		s.ConversationRepository.Update(newConversation)
 
+		s.AddNotification(dto)
+
 		return newMessage, nil
 	} else {
 		s.Logger.Info("Saving new message in DB")
@@ -94,6 +161,8 @@ func (s MessageService) CreateNewMessage(dto dto.MessageDto) (entity.Message, er
 		conversation.UpdatedAt = time.Now()
 
 		s.ConversationRepository.Update(conversation)
+
+		s.AddNotification(dto)
 
 		return newMessage, err
 	}

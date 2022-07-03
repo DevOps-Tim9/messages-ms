@@ -5,6 +5,7 @@ import (
 	"messages-ms/src/config"
 	config_db "messages-ms/src/config/db"
 	"messages-ms/src/controller"
+	"messages-ms/src/rabbitmq"
 	"messages-ms/src/repository"
 	"messages-ms/src/route"
 	"messages-ms/src/service"
@@ -13,6 +14,7 @@ import (
 	"os"
 
 	"github.com/rs/cors"
+	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -23,8 +25,18 @@ func main() {
 
 	dataBase, _ := config_db.SetupDB()
 
+	amqpServerURL := os.Getenv("AMQP_SERVER_URL")
+
+	rabbit := rabbitmq.RMQProducer{
+		ConnectionString: amqpServerURL,
+	}
+
+	channel, _ := rabbit.StartRabbitMQ()
+
+	defer channel.Close()
+
 	repositoryContainer := initializeRepositories(dataBase)
-	serviceContainer := initializeServices(repositoryContainer)
+	serviceContainer := initializeServices(repositoryContainer, channel)
 	controllerContainer := initializeControllers(serviceContainer)
 
 	router := route.SetupRoutes(controllerContainer)
@@ -46,11 +58,12 @@ func initializeControllers(serviceContainer config.ServiceContainer) config.Cont
 	return container
 }
 
-func initializeServices(repositoryContainer config.RepositoryContainer) config.ServiceContainer {
+func initializeServices(repositoryContainer config.RepositoryContainer, channel *amqp.Channel) config.ServiceContainer {
 	messageService := service.MessageService{
 		MessageRepository:      repositoryContainer.MessageRepository,
 		ConversationRepository: repositoryContainer.ConversationRepository,
 		Logger:                 utils.Logger(),
+		RabbitMQChannel:        channel,
 	}
 
 	container := config.NewServiceContainer(
