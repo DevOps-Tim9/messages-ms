@@ -9,6 +9,7 @@ import (
 	"messages-ms/src/repository"
 	"messages-ms/src/route"
 	"messages-ms/src/service"
+	"messages-ms/src/utils"
 	"net/http"
 	"os"
 
@@ -18,6 +19,10 @@ import (
 )
 
 func main() {
+	logger := utils.Logger()
+
+	logger.Info("Connecting with DB")
+
 	dataBase, _ := config_db.SetupDB()
 
 	amqpServerURL := os.Getenv("AMQP_SERVER_URL")
@@ -38,6 +43,8 @@ func main() {
 
 	port := os.Getenv("SERVER_PORT")
 
+	logger.Info("Starting server")
+
 	http.ListenAndServe(fmt.Sprintf(":%s", port), cors.AllowAll().Handler(router))
 }
 
@@ -55,6 +62,7 @@ func initializeServices(repositoryContainer config.RepositoryContainer, channel 
 	messageService := service.MessageService{
 		MessageRepository:      repositoryContainer.MessageRepository,
 		ConversationRepository: repositoryContainer.ConversationRepository,
+		Logger:                 utils.Logger(),
 		RabbitMQChannel:        channel,
 	}
 
