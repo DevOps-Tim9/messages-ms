@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"messages-ms/src/config"
 	config_db "messages-ms/src/config/db"
+	setupJaeger "messages-ms/src/config/jaeger"
 	"messages-ms/src/controller"
 	"messages-ms/src/rabbitmq"
 	"messages-ms/src/repository"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/rs/cors"
 	"github.com/streadway/amqp"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -24,6 +26,18 @@ func main() {
 	logger.Info("Connecting with DB")
 
 	dataBase, _ := config_db.SetupDB()
+
+	tracer, trCloser, err := setupJaeger.InitJaeger()
+
+	if err != nil {
+		logger.Debug(err.Error())
+
+		fmt.Printf("error init jaeger %v", err)
+	} else {
+		defer trCloser.Close()
+
+		opentracing.SetGlobalTracer(tracer)
+	}
 
 	amqpServerURL := os.Getenv("AMQP_SERVER_URL")
 

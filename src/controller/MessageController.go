@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/go-playground/validator.v8"
 )
@@ -28,13 +29,17 @@ func NewMessageController(messageService service.IMessageService) MessageControl
 }
 
 func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Request) {
+	span, ctx := opentracing.StartSpanFromContext(r.Context(), "Handle /api/messages")
+
+	defer span.Finish()
+
 	c.logger.Info("Creating new message request received")
 
 	var messageDto dto.MessageDto
 
 	json.NewDecoder(r.Body).Decode(&messageDto)
 
-	message, error := c.MessageService.CreateNewMessage(messageDto)
+	message, error := c.MessageService.CreateNewMessage(messageDto, ctx)
 
 	if error != nil {
 		handleMessageError(error, w)
@@ -52,6 +57,10 @@ func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Reque
 }
 
 func (c MessageController) GetMesssagesByConversation(w http.ResponseWriter, r *http.Request) {
+	span, ctx := opentracing.StartSpanFromContext(r.Context(), "Handle /messages/conversations/{conversation}")
+
+	defer span.Finish()
+
 	c.logger.Info("getting messages for specified conversation request received")
 
 	params := mux.Vars(r)
@@ -64,7 +73,7 @@ func (c MessageController) GetMesssagesByConversation(w http.ResponseWriter, r *
 		return
 	}
 
-	messages := c.MessageService.GetMesssagesByConversation(conversation)
+	messages := c.MessageService.GetMesssagesByConversation(conversation, ctx)
 
 	if messages == nil {
 		messages = []entity.Message{}
@@ -80,6 +89,10 @@ func (c MessageController) GetMesssagesByConversation(w http.ResponseWriter, r *
 }
 
 func (c MessageController) GetConversationsByUser(w http.ResponseWriter, r *http.Request) {
+	span, ctx := opentracing.StartSpanFromContext(r.Context(), "Handle /messages/users/{user}")
+
+	defer span.Finish()
+
 	c.logger.Info("Getting conversations for specified user request received")
 
 	params := mux.Vars(r)
@@ -92,7 +105,7 @@ func (c MessageController) GetConversationsByUser(w http.ResponseWriter, r *http
 		return
 	}
 
-	conversations := c.MessageService.GetConversationsByUser(uint(user))
+	conversations := c.MessageService.GetConversationsByUser(uint(user), ctx)
 
 	if conversations == nil {
 		conversations = []entity.Conversation{}
