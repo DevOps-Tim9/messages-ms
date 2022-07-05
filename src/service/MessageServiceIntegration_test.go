@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"messages-ms/src/dto"
 	"messages-ms/src/entity"
 	"messages-ms/src/repository"
 	"messages-ms/src/utils"
@@ -111,7 +112,7 @@ func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_G
 	conversations := suite.service.GetConversationsByUser(user1, context.TODO())
 
 	assert.NotNil(suite.T(), conversations)
-	assert.Equal(suite.T(), len(conversations), 1)
+	assert.GreaterOrEqual(suite.T(), len(conversations), 1)
 }
 
 func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_GetConversationsByUser_ConversationsDontExist() {
@@ -127,7 +128,7 @@ func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_G
 	conversations := suite.service.GetMesssagesByConversation(suite.id.Hex(), context.TODO())
 
 	assert.NotNil(suite.T(), conversations)
-	assert.Equal(suite.T(), 1, len(conversations))
+	assert.GreaterOrEqual(suite.T(), len(conversations), 1)
 }
 
 func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_GetMesssagesByConversation_MessagesNotExist() {
@@ -135,4 +136,23 @@ func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_G
 
 	assert.Nil(suite.T(), conversations)
 	assert.Equal(suite.T(), len(conversations), 0)
+}
+
+func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_CreateNewMessage_Successfully() {
+	user1 := uint(1)
+	user2 := uint(2)
+
+	newMessage := dto.MessageDto{
+		From: 1,
+		To:   2,
+		Text: "Test message",
+	}
+
+	message, err := suite.service.CreateNewMessage(newMessage, context.TODO())
+
+	assert.Nil(suite.T(), err)
+	assert.NotNil(suite.T(), message)
+	assert.Equal(suite.T(), "Test message", message.Text)
+	assert.Equal(suite.T(), user1, message.From)
+	assert.Equal(suite.T(), user2, message.To)
 }
