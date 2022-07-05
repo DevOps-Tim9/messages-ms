@@ -31,3 +31,14 @@
 {"level":"info","msg":"Getting all conversations for specified user","service":"","time":"2022-07-05T09:27:16+02:00"}
 {"level":"info","msg":"Getting all messages by conversation","service":"","time":"2022-07-05T09:27:16+02:00"}
 {"level":"info","msg":"Getting all messages by conversation","service":"","time":"2022-07-05T09:27:16+02:00"}
+{"level":"info","msg":"Saving new message","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Creating new conversation","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Saving new message in DB","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Saving new message","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Saving new message in DB","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Getting conversation by participants","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Getting conversation by participants","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Getting all conversations for specified user","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Getting all conversations for specified user","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Getting all messages by conversation","service":"","time":"2022-07-05T09:31:16+02:00"}
+{"level":"info","msg":"Getting all messages by conversation","service":"","time":"2022-07-05T09:31:16+02:00"}
