@@ -22,6 +22,7 @@ type MessageServiceIntegrationTestSuite struct {
 	db            *mongo.Database
 	messages      []entity.Message
 	conversations []entity.Conversation
+	id            primitive.ObjectID
 }
 
 func (suite *MessageServiceIntegrationTestSuite) SetupSuite() {
@@ -53,6 +54,7 @@ func (suite *MessageServiceIntegrationTestSuite) SetupSuite() {
 
 	id := primitive.NewObjectID()
 
+	suite.id = id
 	suite.conversations = []entity.Conversation{
 		{
 			ID:    id,
@@ -116,6 +118,20 @@ func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_G
 	user1 := uint(9999)
 
 	conversations := suite.service.GetConversationsByUser(user1, context.TODO())
+
+	assert.Nil(suite.T(), conversations)
+	assert.Equal(suite.T(), len(conversations), 0)
+}
+
+func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_GetMesssagesByConversation_MessagesExist() {
+	conversations := suite.service.GetMesssagesByConversation(suite.id.Hex(), context.TODO())
+
+	assert.NotNil(suite.T(), conversations)
+	assert.Equal(suite.T(), 1, len(conversations))
+}
+
+func (suite *MessageServiceIntegrationTestSuite) TestIntegrationMessageService_GetMesssagesByConversation_MessagesNotExist() {
+	conversations := suite.service.GetMesssagesByConversation(primitive.NewObjectID().Hex(), context.TODO())
 
 	assert.Nil(suite.T(), conversations)
 	assert.Equal(suite.T(), len(conversations), 0)
