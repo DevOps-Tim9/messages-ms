@@ -26,10 +26,14 @@ services:
       SERVER_PORT: 8083
       AMQP_SERVER_URL: amqp://guest:guest@rabbitmq:5673/
       USER_SERVICE_DOMAIN: users-ms-users-server-1:9093
+      EVENTS_MS: http://localhost:9081/events
     ports:
       - 8083
 
 networks:
+  events-ms:
+    name: events-ms
+    driver: bridge
   messages-ms-test:
     name: messages-ms-test
     driver: bridge

@@ -1,13 +1,16 @@
 package controller
 
 import (
+	"bytes"
 	"encoding/json"
 	"messages-ms/src/dto"
 	"messages-ms/src/entity"
 	"messages-ms/src/service"
 	"messages-ms/src/utils"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/opentracing/opentracing-go"
@@ -42,12 +45,16 @@ func (c MessageController) CreateNewMessage(w http.ResponseWriter, r *http.Reque
 	message, error := c.MessageService.CreateNewMessage(messageDto, ctx)
 
 	if error != nil {
+		AddSystemEvent(time.Now().Format("2006-01-02 15:04:05"), "New message created unsuccessfully")
+
 		handleMessageError(error, w)
 
 		return
 	}
 
 	c.logger.Info("Message created successfully")
+
+	AddSystemEvent(time.Now().Format("2006-01-02 15:04:05"), "New message created successfully")
 
 	payload, _ := json.Marshal(message)
 
@@ -124,4 +131,26 @@ func handleMessageError(error error, w http.ResponseWriter) http.ResponseWriter 
 	w.WriteHeader(http.StatusInternalServerError)
 
 	return w
+}
+
+func AddSystemEvent(time string, message string) error {
+	logger := utils.Logger()
+	event := dto.EventRequestDTO{
+		Timestamp: time,
+		Message:   message,
+	}
+
+	b, _ := json.Marshal(&event)
+	endpoint := os.Getenv("EVENTS_MS")
+	logger.Info("Sending system event to events-ms")
+	req, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer(b))
+	req.Header.Set("content-type", "application/json")
+
+	_, err := http.DefaultClient.Do(req)
+	if err != nil {
+		logger.Debug("Error happened during sending system event")
+		return err
+	}
+
+	return nil
 }
