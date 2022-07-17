@@ -32,6 +32,7 @@ services:
       SERVER_PORT: ${SERVER_PORT}
       AMQP_SERVER_URL: ${AMQP_SERVER_URL}
       USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
+      EVENTS_MS: ${EVENTS_MS}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     volumes:
