@@ -8,12 +8,10 @@ services:
       - messages-ms
     environment:
       MONGO_INITDB_DATABASE: ${POSTGRES_DB}
-
     ports:
       - "5400:27017"
     volumes:
       - data:/data/db
-
   messages-server:
     build:
       context: .
