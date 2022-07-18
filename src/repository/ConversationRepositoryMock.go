@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"messages-ms/src/entity"
 	"time"
@@ -13,7 +14,7 @@ type ConversationRepositoryMock struct {
 	mock.Mock
 }
 
-func (c ConversationRepositoryMock) Create(conversation entity.Conversation) (entity.Conversation, error) {
+func (c ConversationRepositoryMock) Create(conversation entity.Conversation, ctx context.Context) (entity.Conversation, error) {
 	if conversation.User1 == 5 {
 		return entity.Conversation{}, errors.New("")
 	}
@@ -23,7 +24,7 @@ func (c ConversationRepositoryMock) Create(conversation entity.Conversation) (en
 	return conversation, nil
 }
 
-func (c ConversationRepositoryMock) Update(conversation entity.Conversation) error {
+func (c ConversationRepositoryMock) Update(conversation entity.Conversation, ctx context.Context) error {
 	if conversation.ID == primitive.NilObjectID {
 		return errors.New("")
 	}
@@ -31,7 +32,7 @@ func (c ConversationRepositoryMock) Update(conversation entity.Conversation) err
 	return nil
 }
 
-func (c ConversationRepositoryMock) GetConversationByUsers(user1 uint, user2 uint) (entity.Conversation, error) {
+func (c ConversationRepositoryMock) GetConversationByUsers(user1 uint, user2 uint, ctx context.Context) (entity.Conversation, error) {
 	if user1 == 1 && user2 == 2 {
 		return entity.Conversation{}, errors.New("")
 	}
@@ -55,7 +56,7 @@ func (c ConversationRepositoryMock) GetConversationByUsers(user1 uint, user2 uin
 	}, nil
 }
 
-func (c ConversationRepositoryMock) GetConversationsByUser(id uint) []entity.Conversation {
+func (c ConversationRepositoryMock) GetConversationsByUser(id uint, ctx context.Context) []entity.Conversation {
 	if id == 1 {
 		return make([]entity.Conversation, 0)
 	}

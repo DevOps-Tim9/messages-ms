@@ -8,12 +8,10 @@ services:
       - messages-ms
     environment:
       MONGO_INITDB_DATABASE: ${POSTGRES_DB}
-    
     ports:
       - "5400:27017"
     volumes:
       - data:/data/db
-      
   messages-server:
     build:
       context: .
@@ -23,20 +21,38 @@ services:
     networks:
       - messages-ms
       - network-for-ms
-    environment: 
+    environment:
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       DATABASE_DOMAIN: ${DATABASE_DOMAIN}
       DATABASE_SCHEMA: ${DATABASE_SCHEMA}
       DATABASE_PORT: ${DATABASE_PORT}
       SERVER_PORT: ${SERVER_PORT}
+      AMQP_SERVER_URL: ${AMQP_SERVER_URL}
+      USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
+      EVENTS_MS: ${EVENTS_MS}
     ports:
-    - "${SERVER_PORT}:${SERVER_PORT}"
-   
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    volumes:
+      - logs:/root/logs
+
+  promtail:
+    image: grafana/promtail:latest
+    networks:
+      - messages-ms
+      - network-for-ms
+    volumes:
+      - "./promtail:/etc/promtail"
+      - "/var/log:/var/log"
+      - logs:/var/logs
+    command: -config.file=/etc/promtail/promtail.yml
+    restart: always
 
 volumes:
   data:
     name: messages-ms-database
+  logs:
+    name: messages-logs
 
 networks:
   messages-ms:

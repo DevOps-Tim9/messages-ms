@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"messages-ms/src/entity"
 	"time"
@@ -13,7 +14,7 @@ type MessageRepositoryMock struct {
 	mock.Mock
 }
 
-func (m MessageRepositoryMock) Create(message entity.Message) (entity.Message, error) {
+func (m MessageRepositoryMock) Create(message entity.Message, ctx context.Context) (entity.Message, error) {
 	if message.From == 5 {
 		return entity.Message{}, errors.New("")
 	}
@@ -23,7 +24,7 @@ func (m MessageRepositoryMock) Create(message entity.Message) (entity.Message, e
 	return message, nil
 }
 
-func (m MessageRepositoryMock) Update(message entity.Message) error {
+func (m MessageRepositoryMock) Update(message entity.Message, ctx context.Context) error {
 	if message.ID == primitive.NilObjectID {
 		return errors.New("")
 	}
@@ -31,7 +32,7 @@ func (m MessageRepositoryMock) Update(message entity.Message) error {
 	return nil
 }
 
-func (m MessageRepositoryMock) GetMesssagesByConversation(conversationId string) []entity.Message {
+func (m MessageRepositoryMock) GetMesssagesByConversation(conversationId string, ctx context.Context) []entity.Message {
 	id, err := primitive.ObjectIDFromHex(conversationId)
 
 	if err != nil {

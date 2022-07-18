@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  database-test:
+    image: mongo
+    environment:
+      MONGO_INITDB_DATABASE: messages-ms-test
+    ports:
+      - 27017
+    networks:
+      - messages-ms-test
+
+  messages-server-test:
+    build:
+      dockerfile: Dockerfile.test
+      context: .
+    networks:
+      - messages-ms-test
+      - network-for-ms-test
+    environment:
+      DATABASE_USERNAME: admin
+      DATABASE_PASSWORD: admin
+      DATABASE_DOMAIN: database-test
+      DATABASE_SCHEMA: messages-ms-test
+      DATABASE_PORT: 27017
+      SERVER_PORT: 8083
+      AMQP_SERVER_URL: amqp://guest:guest@rabbitmq:5673/
+      USER_SERVICE_DOMAIN: users-ms-users-server-1:9093
+      EVENTS_MS: http://localhost:9081/events
+    ports:
+      - 8083
+
+networks:
+  events-ms:
+    name: events-ms
+    driver: bridge
+  messages-ms-test:
+    name: messages-ms-test
+    driver: bridge
+  network-for-ms-test:
+    name: network-for-ms-test
